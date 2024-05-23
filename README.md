@@ -10,7 +10,7 @@ Everything in the tool is highly configurable. The author will not be held respo
 
 ## Origin
 
-l0c0t0!!!
+l0c0b0b0_!0X#$%
 
 ## Installation
 
