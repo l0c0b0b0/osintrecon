@@ -36,7 +36,6 @@ sudo apt install python3-venv
 Several commands used in OSINTRecon may need to be installed, deppending on your OS: 
 
 * SpiderFoot 4.0.0
-* DiG 9.19.21-1
 * DNSRecon version 1.1.5
 * Sublist3r
 * Amass v4.2.0
@@ -48,7 +47,7 @@ Several commands used in OSINTRecon may need to be installed, deppending on your
 On Kali Linux, you can ensure these are all installed using the following commands:
 
 ```bash
-sudo apt install spiderfoot dig dnsrecon sublist3r amass fierce cloud-enum asn metagoofil
+sudo apt install spiderfoot dnsrecon sublist3r amass fierce cloud-enum asn metagoofil
 ```
 
 ### Installation Method: Manually
