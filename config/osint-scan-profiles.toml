@@ -1,0 +1,238 @@
+
+###############
+   
+[domain-scan]
+service-names = [
+    '^domain-enum',
+]
+    [[domain-scan.scan]]
+    name = 'spiderfoot-email'
+    command = '/usr/bin/spiderfoot -t EMAILADDR,EMAILADDR_COMPROMISED,EMAILADDR_DELIVERABLE,EMAILADDR_GENERIC,MALICIOUS_EMAILADDR -x -q -r -s {address} | tee "{scandir}/info/_email_spiderfoot_{address}.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'Email: {match}'
+            pattern = '[\w.+-]+@[\w-]+\.[\w.-]+'
+
+    [[domain-scan.scan]]
+    name = 'sublist3r-ports'
+    command = '/usr/bin/sublist3r --verbose --no-color --ports 21,22,23,25,53,80,110,111,135,139,143,199,443,445,587,993,995,1025,1720,1723,3306,3389,5900,8080,8888 --domain {address} | tee "{scandir}/recon/_subdomains_sublist3r_{address}.txt"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'TCPPorts: {match}'
+            pattern = '(.*Found open ports:.*)'
+        
+
+    [[domain-scan.scan]]
+    name = 'spiderfoot-ports'
+    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER -x -q -r -s {address} | tee "{scandir}/ports/_ports_spiderfoot_{address}.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'TCPPorts: {match}'
+            pattern = '(?<=:)(\d+)$'
+        [[domain-scan.scan.pattern]]
+            description = 'TCPPortBanner: {match}'
+            pattern = 'Open TCP Port Banner\s+(.*)$'
+    
+    [[domain-scan.scan]]
+    name = 'spiderfoot-web'
+    command = '/usr/bin/spiderfoot -m sfp_whatcms,sfp_webserver,sfp_webframework,sfp_tool_cmseek,sfp_builtwith -q -r -s {address} | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
+    run_once = true
+        [[domain-scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '\s+\s+Web Technology\s+(\S+)\s+(\S+)'
+
+    [[domain-scan.scan]]
+    name = 'dnsrecon-DNSEnum'
+    command = '/usr/bin/dnsrecon -a -b -d {address} -j "{scandir}/info/_dnsenum_dnsrecon_{address}.json"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]NS\s.*\s\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]A\s.*\s\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]MX\s.*\s\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]SOA\s.*\s\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]TXT\s.*\sv=spf.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]TXT\s.*\sv=spf.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]TXT\s.*\sv=DMAR.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'DNSEnum: {match}'
+            pattern = '([ \t ]PTR\s.*\s\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+
+   
+    [[domain-scan.scan]]
+    name = 'spiderfoot-dataleak'
+    command = '/usr/bin/spiderfoot -m sfp_ahmia,sfp_stackoverflow,sfp_slideshare,sfp_searchcode,sfp_opencorporates,sfp_openbugbounty,sfp_malwarepatrol,sfp_darksearch,sfp_dehashed -q -r -s {address} | tee "{scandir}/info/_dataleak_spipderfoot_{address}.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'Dataleak: {match}'
+            pattern = '\t(?!.*\.[a-z]{2,6}$)([^\t]+)$'
+
+    [[domain-scan.scan]]
+    name = 'spiderfoot-socialmedia'
+    command = '/usr/bin/spiderfoot -m sfp_socialprofiles,sfp_sociallinks,sfp_social,sfp_psbdmp,sfp_instagram,sfp_flickr,sfp_azureblobstorage,sfp_apple_itunes,sfp_arin,sfp_accounts -q -r -s {address} | tee "{scandir}/info/_dataleak_spipderfoot_{address}.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'Socialmedia: {match}'
+            pattern = '\t(?!.*\.[a-z]{2,6}$)([^\t]+)$'
+
+    [[domain-scan.scan]]
+    name = 'Metadata Collector'
+    command = '/usr/bin/metagoofil -e 45 -i 5 -l 10 -n 25 -t "pdf,doc,xls,ppt,docx,xlsx,pptx,conf,config" -d {address} -f "{scandir}/files/_links_metagoofil_{address}.txt" -o "{scandir}/files/" | tee "{scandir}/files/_metadata_metagoogil.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'Metadata: {match}'
+            pattern = '(.*Results: .*)'
+    
+    [[domain-scan.scan]]
+    name = 'spiderfoot-all'
+    command = '/usr/bin/spiderfoot -u passive -q -r -s {address} | tee "{scandir}/_full_spiderfoot_{address}.ansi"'
+    run_once = true
+        [[domain-scan.scan.pattern]]
+            description = 'Email: {match}'
+            pattern = '[\w.+-]+@[\w-]+\.[\w.-]+'
+        [[domain-scan.scan.pattern]]
+            description = 'TCPPortBanner: {match}'
+            pattern = 'Open TCP Port Banner\s+(.*)$'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '\s+\s+Web Technology\s+(\S+)\s+(\S+)'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '\s+\s+Web Content Type\s+(\S+)\s+(\S+)'
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '(CVE-\d{4}-\d{4,7})'
+        # TODO: Add more regex for important things 
+        
+    [[domain-scan.manual]]
+    description = 'dnsrecon-DNSSpoofing'
+    commands = [
+            '/usr/bin/dnsrecon -a -b -d {address} -t zonewalk -j "{scandir}/info/_dnspoffing_dnsrecon_{address}.json"'
+    ]
+
+    [[domain-scan.manual]]
+    description = 'TheHarvester-all'
+    commands = [
+            'theHarvester -d {address} --virtual-host -b all -l 250 --start 0 | tee "{scandir}/_full_theharvester_{address}.ansi"'
+    ]
+
+    [[domain-scan.manual]]
+    description = 'InfoHound-All -> https://github.com/Fundacio-i2CAT/InfoHound.git'
+    commands = [
+            'Change on ./infohound_project/settings.py => ALLOWED_HOSTS = ["0.0.0.0","127.0.0.1"]'
+    ]
+    
+[ip-subdomain]
+service-names = [
+    '^ip-subdomain',
+]
+    [[ip-subdomain.scan]]
+    name = 'spiderfoot-web'
+    command = '/usr/bin/spiderfoot -m sfp_whatcms,sfp_webserver,sfp_webframework,sfp_tool_cmseek,sfp_builtwith -q -r -s {domain} | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
+        [[ip-subdomain.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '\s+\s+Web Technology\s+(\S+)\s+(\S+)'
+
+
+    [[ip-subdomain.scan]]
+    name = 'spiderfoot-ports'
+    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER -x -q -r -s {ipaddress} | tee "{scandir}/ports/spipderfoot_ports_{ipaddress}.ansi"'
+        [[ip-subdomain.scan.pattern]]
+            description = 'TCPPorts: {match}'
+            pattern = '(?<=:)(\d+)$'
+        [[ip-subdomain.scan.pattern]]
+            description = 'TCPPortBanner: {match}'
+            pattern = 'Open TCP Port Banner\s+(.*)$'
+
+
+    [[ip-subdomain.scan]]
+    name = 'asn-recon'
+    command = '/usr/bin/asn -s -m -J {ipaddress} | tee "{scandir}/recon/asn_recon_{ipaddress}.json"'
+        [[ip-subdomain.scan.pattern]]
+            description = 'Tech: {match}'
+            pattern = 'cpe:(?:/a:)?(.*)$'
+        [[ip-subdomain.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '(CVE-\d{4}-\d{4,7})'
+ 
+       
+    [[ip-subdomain.manual]]
+    description = 'ipgeolocation -> https://github.com/maldevel/IPGeoLocation.git'
+    commands = [
+            'python3 ipgeolocation.py -t {ipaddress} -ec "{scandir}/info/ip_geolocation_{ipaddress}.csv"'
+    ]
+        
+
+[subdomain-recon]
+service-names = [
+    '^subdomain-recon',
+]
+    [[subdomain-recon.scan]]
+    name = 'spiderfoot-web'
+    command = '/usr/bin/spiderfoot -m sfp_whatcms,sfp_webserver,sfp_webframework,sfp_tool_cmseek,sfp_builtwith -q -r -s {domain} | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
+        [[subdomain-recon.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = 'Web Technology\s+[^\t]+\t([^\t]+)$'
+      
+[revlookup]
+service-names = [
+    '^revlookup',
+]
+    [[revlookup.scan]]
+    name = 'spiderfoot-ports'
+    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER  -x -q -r -s {ipaddress} | tee "{scandir}/ports/spipderfoot_ports_{ipaddress}.ansi"'
+        [[revlookup.scan.pattern]]
+            description = 'TCPPorts: {match}'
+            pattern = '(?:\d+)$'
+    
+
+    [[revlookup.scan]]
+    name = 'asn-vulnerabilities'
+    command = '/usr/bin/asn -s -m -J {ipaddress} | tee "{scandir}/vulns/asn_vulns_{ipaddress}.json"'
+        [[revlookup.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '(CVE-\d{4}-\d{4,7})'
+
+    [[revlookup.scan]]
+    name = 'spiderfoot-vulnerabilities'
+    command = '/usr/bin/spiderfoot -t VULNERABILITY_CVE_CRITICAL,VULNERABILITY_CVE_HIGH,VULNERABILITY_CVE_LOW,VULNERABILITY_CVE_MEDIUM,VULNERABILITY_DISCLOSURE,VULNERABILITY_GENERAL -x -q -r -s {ipaddress} | tee "{scandir}/vulsn/spipderfoot_vulns_{ipaddress}.ansi"'
+        [[revlookup.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '(CVE-\d{4}-\d{4,7})'
+
+    [[revlookup.manual]]
+    description = 'ipgeolocation -> https://github.com/maldevel/IPGeoLocation.git'
+    commands = [
+                'python3 ipgeolocation.py -t {ipaddress} -ec "{scandir}/info/ip_geolocation_{ipaddress}.csv"'
+    ]
+    
+
+#[social_media]
+#services-names = [
+#'^usernames'
+#]
+#    [[social_media.manual]]
+#    Kali Linux tool
+#    name = 'sherlock-usernames'
+#    command = 'sherlock --verbose --timeout 120 --csv --folderoutput "{scandir}/_usernames_sherlock.csv" {usernames_list} -o csv'
+#    run_once = true
+
+
+
+    
+
+
+
+
