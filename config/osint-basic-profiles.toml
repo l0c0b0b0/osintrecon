@@ -4,61 +4,56 @@
 
     [default.host-domain]
         [default.host-domain.domain]
-        command = 'host {address} | tee "{scandir}/recon/_domainip_host.ansi"'
-        pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\s*)(has)(\s*)(address)(\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+            command = 'host {address} | tee "{scandir}/recon/_domainip_host.ansi"'
+            pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\s*)(has)(\s*)(address)(\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
        
     [default.dig-revdns-domain]
         [default.dig-revdns-domain.domain]
-        command = '/usr/bin/dig {address} | tee "{scandir}/recon/_reversedns_dig.ansi"'
-        pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\.)(\s*)(.*)(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+            command = '/usr/bin/dig {address} | tee "{scandir}/recon/_reversedns_dig.ansi"'
+            pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\.)(\s*)(.*)(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
 
     [default.dnsrecon-revdns-domain]
         [default.dnsrecon-revdns-domain.domain]
-        command = '/usr/bin/dnsrecon -a -b -d {address} -c "{scandir}/recon/_reversedns_dnsrecon.csv"'
-        pattern = ',(?P<domain>[a-zA-Z0-9.-]+),(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}),'
+            command = '/usr/bin/dnsrecon -a -b -d {address} -c "{scandir}/recon/_reversedns_dnsrecon.csv"'
+            pattern = ',(?P<domain>[a-zA-Z0-9.-]+),(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}),'
 
     [default.sublist3r-subdomains]
         [default.sublist3r-subdomains.domain]
-        command = '/usr/bin/sublist3r --verbose --no-color --domain {address} -o "{scandir}/recon/_subdomains_sublist3r.txt"'
-        pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(?P<ipaddress>)'
+            command = '/usr/bin/sublist3r --verbose --no-color --domain {address} -o "{scandir}/recon/_subdomains_sublist3r.txt"'
+            pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(?P<ipaddress>)'
 
     [default.amass-subdomains]
         [default.amass-subdomains.domain]
-        command = '/usr/bin/amass enum -dns-qps 500 -timeout 20 -d {address} -nocolor -demo -o "{scandir}/recon/_subdomains_amass.txt"'
-        pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\s*)(.*)(\s*)(-->\s*)(.*)(\s*)(-->\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+            command = '/usr/bin/amass enum -dns-qps 500 -timeout 20 -d {address} -nocolor -demo -o "{scandir}/recon/_subdomains_amass.txt"'
+            pattern = '^(?P<domain>[a-zA-Z0-9.-]+)(\s*)(.*)(\s*)(-->\s*)(.*)(\s*)(-->\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
     
     [default.fierce-subdomains]
         [default.fierce-subdomains.domain]
-        command = '/usr/bin/fierce --domain {address} | tee "{scandir}/recon/_subdomains_fierce.ansi"'
-        pattern = '^Found:\s*(?P<domain>[\w.-]+)\.\s*\((?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\)$'
+            command = '/usr/bin/fierce --domain {address} | tee "{scandir}/recon/_subdomains_fierce.ansi"'
+            pattern = '^Found:\s*(?P<domain>[\w.-]+)\.\s*\((?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\)$'
         
     [default.cloud-enumeration]
         [default.cloud-enumeration.domain]
-        command = '/usr/bin/cloud_enum --keyword {address} --format csv --logfile "{scandir}/info/_cloudenum_cloudenum_log.csv" | tee "{scandir}/recon/_cloudenum_cloudenum.ansi"'
-        pattern = '^(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30}))(?P<ipaddress>)'
+            command = '/usr/bin/cloud_enum --keyword {address} --format csv --logfile "{scandir}/info/_cloudenum_cloudenum_log.csv" | tee -a "{scandir}/recon/_cloudenum_cloudenum.ansi"'
+            pattern = '^(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30}))(?P<ipaddress>)'
     
     [default.spiderfoot-cloudS3]
         [default.spiderfoot-cloudS3.domain]
-        command = '/usr/bin/spiderfoot -m sfp_s3bucket -q -r -s {address} | tee "{scandir}/recon/_cloudenum_spiderfoot.ansi"'
-        pattern = '(.*)(IP)(\s*)(Address)(\s*)(?P<domain>[a-zA-Z0-9.-]+)(\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+            command = '/usr/bin/spiderfoot -m sfp_s3bucket -q -r -s {address} | tee -a "{scandir}/recon/_cloudenum_spiderfoot.ansi"'
+            pattern = '(.*)(IP)(\s*)(Address)(\s*)(?P<domain>[a-zA-Z0-9.-]+)(\s*)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
 
 
     [default.amass-revlookup]
         [default.amass-revlookup.ipaddress]
-        command = '/usr/bin/amass intel -v -max-dns-queries 500 -timeout 10 -cidr {address} -o "{scandir}/_revlookup_amass_{address}.txt"'
-        pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'
+            command = '/usr/bin/amass intel -v -max-dns-queries 500 -timeout 10 -cidr {address} -o "{scandir}/_revlookup_amass_{address}.txt"'
+            pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'
 
-    [default.asn-revlookup]
-        [default.asn-revlookup.ipaddress]
-        command = '/usr/bin/asn -v -n -m -c "{scandir}/_revlookup_asn_{address}.csv" {address}'
-        pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'
+    [default.spiderfoot-revlookup]
+        [default.spiderfoot-revlookup.ipaddress]
+            command = '/usr/bin/spiderfoot -t CO_HOSTED_SITE_DOMAIN,CO_HOSTED_SITE,CO_HOSTED_SITE_DOMAIN_WHOIS,INTERNET_NAME,INTERNET_NAME_UNRESOLVED,DOMAIN_NAME,PROVIDER_DNS,PROVIDER_HOSTING,PROVIDER_MAIL,PROVIDER_TELCO -f -q -r -s {address} -o csv | tee "{scandir}/_revlookup_spiderfoot_{address}.ansi"'
+            pattern = '.*(,)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(,)(?P<domain>[a-zA-Z0-9.-]+)$'
 
-    [default.dig-revdns]
-        [default.dig-revdns.ipaddress]
-        command = 'dig -x {address} | tee "{scandir}/_reversedns_dig_{address}.ansi"'
-        pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'
-
-    [default.dnsrecon-revlookup]
-        [default.dnsrecon-revlookup.ipaddress]
-        command = '/usr/bin/dnsrecon -r {address} -c "{scandir}/_revlookup_dnsrecon_{address}.csv"'
-        pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'
+    #[default.dnsrecon-revlookup]
+    #    [default.dnsrecon-revlookup.ipaddress]
+    #    command = '/usr/bin/dnsrecon -r {address} -c "{scandir}/_revlookup_dnsrecon_{address}.csv"'
+    #    pattern = '(.*)(\\t)(IP)(\s*)(Address)(\\t)(?P<domain>(?![\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\._-]{1,61}|[a-z0-9-]{1,30})(\\t)(?P<ipaddress>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))'

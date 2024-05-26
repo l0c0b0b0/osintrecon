@@ -7,7 +7,7 @@ service-names = [
 ]
     [[domain-scan.scan]]
     name = 'spiderfoot-email'
-    command = '/usr/bin/spiderfoot -t EMAILADDR,EMAILADDR_COMPROMISED,EMAILADDR_DELIVERABLE,EMAILADDR_GENERIC,MALICIOUS_EMAILADDR -f -x -q -r -s {address} | tee "{scandir}/info/_email_spiderfoot_{address}.ansi"'
+    command = '/usr/bin/spiderfoot -t EMAILADDR,EMAILADDR_COMPROMISED,EMAILADDR_DELIVERABLE,EMAILADDR_GENERIC,MALICIOUS_EMAILADDR -x -q -r -s {address} | tee "{scandir}/info/_email_spiderfoot_{address}.ansi"'
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'Email: {match}'
@@ -15,7 +15,7 @@ service-names = [
 
     [[domain-scan.scan]]
     name = 'sublist3r-ports'
-    command = '/usr/bin/sublist3r --verbose --no-color --ports 21,22,23,25,53,80,110,111,135,139,143,199,443,445,587,993,995,1025,1720,1723,3306,3389,5900,8080,8888 --domain {address} | tee "{scandir}/recon/_subdomains_sublist3r_{address}.txt"'
+    command = '/usr/bin/sublist3r --verbose --no-color --ports 21,22,23,25,53,80,110,111,135,139,143,199,443,445,587,993,995,1025,1720,1723,3306,3389,5900,8080,8888 --domain {address} -o "{scandir}/recon/_subdomains_sublist3r_{address}.txt"'
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'TCPPorts: {match}'
@@ -24,7 +24,7 @@ service-names = [
 
     [[domain-scan.scan]]
     name = 'spiderfoot-ports'
-    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER -f -x -q -r -s {address} | tee "{scandir}/ports/_ports_spiderfoot_{address}.ansi"'
+    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER -x -q -r -s {address} | tee "{scandir}/ports/_ports_spiderfoot_{address}.ansi"'
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'TCPPorts: {match}'
@@ -39,10 +39,10 @@ service-names = [
     run_once = true
         [[domain-scan.pattern]]
             description = 'WebTech: {match}'
-            pattern = r'.*,Web Server,(\S+),((?!text/html).*)'
+            pattern = '.*,Web Server,(\S+),((?!text/html|text/css).*)'
         [[domain-scan.scan.pattern]]
             description = 'WebTech: {match}'
-            pattern = r'.*,Web Content Type,(\S+),((?!text/html).*)'
+            pattern = '.*,Web Content Type,(\S+),((?!text/html|text/css).*)'
 
     [[domain-scan.scan]]
     name = 'dnsrecon-DNSEnum'
@@ -80,7 +80,7 @@ service-names = [
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'Dataleak: {match}'
-            pattern = '.*,(.*?),([^,]+)$'
+            pattern = '.*,([^,]+,(?!.*Data).*)$'
 
     [[domain-scan.scan]]
     name = 'spiderfoot-socialmedia'
@@ -88,11 +88,11 @@ service-names = [
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'Socialmedia: {match}'
-            pattern = '.*,(.*?),([^,]+)$'
+            pattern = '.*,([^,]+,(?!.*Data).*)$'
 
     [[domain-scan.scan]]
     name = 'Metadata Collector'
-    command = '/usr/bin/metagoofil -e 45 -i 5 -l 10 -n 25 -t "pdf,doc,xls,ppt,docx,xlsx,pptx,conf,config" -d {address} -f "{scandir}/files/_links_metagoofil_{address}.txt" -o "{scandir}/files/" | tee "{scandir}/files/_metadata_metagoogil.ansi"'
+    command = '/usr/bin/metagoofil -e 45 -i 5 -l 10 -n 25 -t "xlsx,pdf,docx,pptx,conf,config,ppt,doc,xls" -d {address} -f="{scandir}/files/_links_metagoofil_{address}.txt" -o "{scandir}/files/" | tee "{scandir}/files/_metadata_metagoogil.ansi"'
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'Metadata: {match}'
@@ -100,7 +100,7 @@ service-names = [
     
     [[domain-scan.scan]]
     name = 'spiderfoot-all'
-    command = '/usr/bin/spiderfoot -u passive -q -r -s {address} | tee "{scandir}/_full_spiderfoot_{address}.ansi"'
+    command = '/usr/bin/spiderfoot -u passive -q -r -s {address} -o csv | tee -a "{scandir}/_full_spiderfoot_{address}.ansi"'
     run_once = true
         [[domain-scan.scan.pattern]]
             description = 'Email: {match}'
@@ -108,15 +108,105 @@ service-names = [
         [[domain-scan.scan.pattern]]
             description = 'TCPPortBanner: {match}'
             pattern = 'Open TCP Port Banner\s+(.*)$'
-        [[domain-scan.pattern]]
-            description = 'WebTech: {match}'
-            pattern = r'.*,Web Server,(\S+),((?!text/html).*)'
         [[domain-scan.scan.pattern]]
             description = 'WebTech: {match}'
-            pattern = r'.*,Web Content Type,(\S+),((?!text/html).*)'
+            pattern = '.*,Web Server,(\S+),((?!text/html|text/css).*)'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '.*,Web Content Type,(\S+),((?!text/html|text/css).*)'
+        [[domain-scan.scan.pattern]]
+            description = 'AccountExt: {match}'
+            pattern = '.*,Account on External Site,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'AccountHacked: {match}'
+            pattern = '.*,Hacked Account on External Site,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'AccountHacked: {match}'
+            pattern = '.*,Hacked User Account on External Site,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'BlacklistNet: {match}'
+            pattern = '.*,Blacklisted Co-Hosted Site,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'BlacklistNet: {match}'
+            pattern = '.*,Blacklisted Internet Name,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'BlacklistNet: {match}'
+            pattern = '.*,Blacklisted IP Address,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'DarkWeb: {match}'
+            pattern = '.*,Darknet Mention Web Content,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'DarkWeb: {match}'
+            pattern = '.*,Darknet Mention URL,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Defaced: {match}'
+            pattern = '.*,Defaced Co-Hosted Site,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Defaced: {match}'
+            pattern = '.*,Defaced,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Defaced: {match}'
+            pattern = '.*,Defaced IP Address,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'HackedEmail: {match}'
+            pattern = '.*,Hacked Email Address,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'HackedPasswd: {match}'
+            pattern = '.*,Compromised Password Hash,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Usernames: {match}'
+            pattern = '.*,Human Name,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Tech: {match}'
+            pattern = '.*,Operating System,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'HackedPasswd: {match}'
+            pattern = '.*,Compromised Password,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Phone: {match}'
+            pattern = '.*,Phone Number,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'HackedPhone: {match}'
+            pattern = '.*,Phone Number Compromised,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Phone: {match}'
+            pattern = '.*,Phone Number Type,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Socialmedia: {match}'
+            pattern = '.*,Social Media Presence,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Tech: {match}'
+            pattern = '.*,Software Used,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '.*,Web Content Type,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTechLogin: {match}'
+            pattern = '.*,URL (Accepts Passwords),(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'Usernames: {match}'
+            pattern = '.*,Username,(.*)'
         [[domain-scan.scan.pattern]]
             description = 'CVE: {match}'
-            pattern = '(CVE-\d{4}-\d{4,7})'
+            pattern = '.*,Vulnerability - CVE Critical,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '.*,Vulnerability - CVE High,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '.*,Vulnerability - CVE Low,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '.*,Vulnerability - CVE Medium,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '.*,Vulnerability - Third Party Disclosure,(.*)' 
+        [[domain-scan.scan.pattern]]
+            description = 'CVE: {match}'
+            pattern = '.*,Vulnerability - General,(.*)'
+        [[domain-scan.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '.*,Web Technology,(.*)'
         # TODO: Add more regex for important things 
         
     [[domain-scan.manual]]
@@ -143,13 +233,13 @@ service-names = [
 ]
     [[ip-subdomain.scan]]
     name = 'spiderfoot-web'
-    command = '/usr/bin/spiderfoot -t WEBSERVER_BANNER,WEBSERVER_TECHNOLOGY,WEB_ANALYTICS_ID,TARGET_WEB_CONTENT_TYPE,TARGET_WEB_COOKIE -f -x -q -r -s {domain} | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
+    command = '/usr/bin/spiderfoot -t WEBSERVER_BANNER,WEBSERVER_TECHNOLOGY,WEB_ANALYTICS_ID,TARGET_WEB_CONTENT_TYPE,TARGET_WEB_COOKIE -f -x -q -r -s {domain} -o csv | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
         [[ip-subdomain.pattern]]
             description = 'WebTech: {match}'
-            pattern = r'.*,Web Server,(\S+),((?!text/html).*)'
+            pattern = '.*,Web Server,(\S+),((?!text/html|text/css).*)'
         [[ip-subdomain.scan.pattern]]
             description = 'WebTech: {match}'
-            pattern = r'.*,Web Content Type,(\S+),((?!text/html).*)'
+            pattern = '.*,Web Content Type,(\S+),((?!text/html|text/css).*)'
 
     [[ip-subdomain.scan]]
     name = 'spiderfoot-ports'
@@ -186,10 +276,13 @@ service-names = [
 ]
     [[subdomain-recon.scan]]
     name = 'spiderfoot-web'
-    command = '/usr/bin/spiderfoot -m sfp_whatcms,sfp_webserver,sfp_webframework,sfp_tool_cmseek,sfp_builtwith -q -r -s {domain} | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
+    command = '/usr/bin/spiderfoot -t WEBSERVER_BANNER,WEBSERVER_TECHNOLOGY,WEB_ANALYTICS_ID,TARGET_WEB_CONTENT_TYPE,TARGET_WEB_COOKIE -f -x -q -r -s {domain} -o csv | tee "{scandir}/web/spiderfoot_web_{domain}.ansi"'
         [[subdomain-recon.scan.pattern]]
             description = 'WebTech: {match}'
-            pattern = 'Web Technology\s+[^\t]+\t([^\t]+)$'
+            pattern = '.*,Web Server,(\S+),((?!text/html|text/css).*)'
+        [[subdomain-recon.scan.pattern]]
+            description = 'WebTech: {match}'
+            pattern = '.*,Web Content Type,(\S+),((?!text/html|text/css).*)'
       
 [revlookup]
 service-names = [
@@ -197,22 +290,27 @@ service-names = [
 ]
     [[revlookup.scan]]
     name = 'spiderfoot-ports'
-    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER  -x -q -r -s {ipaddress} | tee "{scandir}/ports/spipderfoot_ports_{ipaddress}.ansi"'
-        [[revlookup.scan.pattern]]
+    command = '/usr/bin/spiderfoot -t UDP_PORT_OPEN,UDP_PORT_OPEN_BANNER,TCP_PORT_OPEN,TCP_PORT_OPEN_BANNER -f -q -r -s {ipaddress} | tee "{scandir}/ports/spipderfoot_ports_{ipaddress}.ansi"'
+        [[ip-subdomain.scan.pattern]]
             description = 'TCPPorts: {match}'
-            pattern = '(?:\d+)$'
-    
+            pattern = '(?<=:)(\d+)$'
+        [[ip-subdomain.scan.pattern]]
+            description = 'TCPPortBanner: {match}'
+            pattern = 'Open TCP Port Banner\s+(.*)$' 
 
     [[revlookup.scan]]
     name = 'asn-vulnerabilities'
-    command = '/usr/bin/asn -s -m -J {ipaddress} | tee "{scandir}/vulns/asn_vulns_{ipaddress}.json"'
+    command = '/usr/bin/asn -v -m -s -j {ipaddress} | tee "{scandir}/vulns/asn_vulns_{ipaddress}.json"'
         [[revlookup.scan.pattern]]
             description = 'CVE: {match}'
             pattern = '(CVE-\d{4}-\d{4,7})'
+        [[revlookup.scan.pattern]]
+            description = 'Tech: {match}'
+            pattern = 'cpe:(?:/a:)?(.*)$'
 
     [[revlookup.scan]]
     name = 'spiderfoot-vulnerabilities'
-    command = '/usr/bin/spiderfoot -t VULNERABILITY_CVE_CRITICAL,VULNERABILITY_CVE_HIGH,VULNERABILITY_CVE_LOW,VULNERABILITY_CVE_MEDIUM,VULNERABILITY_DISCLOSURE,VULNERABILITY_GENERAL -x -q -r -s {ipaddress} | tee "{scandir}/vulsn/spipderfoot_vulns_{ipaddress}.ansi"'
+    command = '/usr/bin/spiderfoot -t VULNERABILITY_CVE_CRITICAL,VULNERABILITY_CVE_HIGH,VULNERABILITY_CVE_LOW,VULNERABILITY_CVE_MEDIUM,VULNERABILITY_DISCLOSURE,VULNERABILITY_GENERAL -x -q -r -s {ipaddress} | tee "{scandir}/vulns/spipderfoot_vulns_{ipaddress}.ansi"'
         [[revlookup.scan.pattern]]
             description = 'CVE: {match}'
             pattern = '(CVE-\d{4}-\d{4,7})'
@@ -223,7 +321,6 @@ service-names = [
                 'python3 ipgeolocation.py -t {ipaddress} -ec "{scandir}/info/ip_geolocation_{ipaddress}.csv"'
     ]
     
-
 #[social_media]
 #services-names = [
 #'^usernames'

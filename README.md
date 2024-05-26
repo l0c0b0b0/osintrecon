@@ -35,26 +35,31 @@ sudo apt install python3-venv
 
 Several commands used in OSINTRecon may need to be installed, deppending on your OS: 
 
-* SpiderFoot 4.0.0
-* DNSRecon version 1.1.5
+* SpiderFoot
+* DNSRecon
 * Sublist3r
-* Amass v4.2.0
+* Amass
 * Fierce
 * cloud-enum
-* Asn 0.76.1
-* Metagoofil v1.2.0
+* Asn
+* Metagoofil
+* Dig
 
 On Kali Linux, you can ensure these are all installed using the following commands:
 
 ```bash
-sudo apt install spiderfoot dnsrecon sublist3r amass fierce cloud-enum asn metagoofil
+sudo apt install spiderfoot dnsrecon sublist3r amass fierce cloud-enum asn metagoofil dnsutils
 ```
 
-### Installation Method: Manually
+### Installation: Manually
 
 Install and execute `osintrecon.py` from within the OSINT directory, install the dependencies:
 
-Create a virtual enviroment with python3:
+```bash
+(root) pip install -r requirements.txt
+```
+
+You can also create a VirtualEnviroment with python3:
 ```bash
 (root) python3 -m venv osintrecon
 (root) source osintrecon/bin/activate
@@ -69,7 +74,7 @@ To exit the virtual enviromment:
 You will then be able to run the `osintrecon.py` script:
 
 ```bash
-(root) python3 osintrecon.py [OPTIONS] target.com
+(root) python3 osintrecon.py target.com [options]
 ```
 
 ## Usage
@@ -77,41 +82,35 @@ You will then be able to run the `osintrecon.py` script:
 OSINTRecon uses Python 3 specific functionality and does not support Python 2.
 
 ```
-usage: osintrecon.py [-h] [-t TARGET_FILE] [-ct <number>] [-cs <number>]
-                [--profile PROFILE_NAME] [-o OUTPUT_DIR] [--single-target]
-                [--only-scans-dir] [-v] [--disable-sanity-checks]
-                [targets ...]
+usage: osintrecon.py [-h] [-t TARGET_FILE] [-ct <number>] [-cs <number>] [--profile PROFILE_NAME]
+                     [-o OUTPUT_DIR] [--only-scans-dir] [-v] [--disable-sanity-checks]
+                     [targets ...]
 
 OSINT Enumeration
 
 positional arguments:
-  targets               Resolvable hostnames (e.g. foo.bar) to scan or IP addresses (e.g.
-                        10.0.0.1), CIDR notation (e.g. 10.0.0.1/24)
+  targets               IP addresses (e.g. 10.0.0.1), CIDR notation (e.g. 10.0.0.1/24), or resolvable
+                        hostnames (e.g. foo.bar) to scan.
 
 options:
   -h, --help            show this help message and exit
   -t TARGET_FILE, --targets TARGET_FILE
-                        Read only IP address from file, every domain will be translate to
-                        ip.
+                        Read only IP address from file, every domain will be translate to ip.
   -ct <number>, --concurrent-targets <number>
-                        The maximum number of target hosts to scan concurrently. Default:
-                        2
+                        The maximum number of target hosts to scan concurrently. Default: 2
   -cs <number>, --concurrent-scans <number>
-                        The maximum number of scans to perform per target host. Default:
-                        3
+                        The maximum number of scans to perform per target host. Default: 3
   --profile PROFILE_NAME
-                        The OSINT basic scanning profile to use (defined in osint-basic-
-                        profiles.toml). Default: default
+                        The port scanning profile to use (defined in port-scan-profiles.toml). Default:
+                        default
   -o OUTPUT_DIR, --output OUTPUT_DIR
                         The output directory for results. Default: osint
-  --single-target       Only scan a domain.
-  --only-scans-dir      Only create the "scans" directory for results. Other directories
-                        (e.g. report) will not be created. Default: false
+  --only-scans-dir      Only create the "scans" directory for results. Other directories (e.g. exploit,
+                        loot, report) will not be created. Default: false
   -v, --verbose         Enable verbose output. Repeat for more verbosity.
   --disable-sanity-checks
-                        Disable sanity checks that would otherwise prevent the scans from
-                        running. Default: false
-
+                        Disable sanity checks that would otherwise prevent the scans from running. Default:
+                        false
 ```
 
 ### Verbosity
@@ -132,10 +131,7 @@ By default, results will be stored in the ./osint directory. A new sub directory
 osint
 └── target
     ├── report
-    │   ├── csv
-    │   │   └── IpSubdomain.csv
-    │   │   └── Patterns.csv
-    │   └── ip_sub.txt
+    │   └── ipdomain.txt
     └── scans
         ├── _commands.log
         ├── _errors.log

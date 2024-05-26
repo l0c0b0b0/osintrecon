@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#    AutoRecon is a multi-threaded network reconnaissance tool which performs automated enumeration of services.
+#    OsintRecon is a multi-threaded reconnaissance tool which performs automated OSINT enumeration of a domain.
 #
 #    This program can be redistributed and/or modified under the terms of the
 #    GNU General Public License, either version 3 of the License, or (at your
@@ -12,7 +12,7 @@ import atexit
 import argparse
 from colorama import Fore, Style
 from concurrent.futures import ProcessPoolExecutor, as_completed, FIRST_COMPLETED
-import csv
+#import csv
 import ipaddress as pis
 import re
 import socket
@@ -44,7 +44,6 @@ osint_basic_profile = None
 
 rootdir = os.path.dirname(os.path.realpath(__file__))
 
-single_target = False
 only_scans_dir = False
 
 def e(*args, frame_index=1, **kvargs):
@@ -209,18 +208,17 @@ async def read_stream(stream, target, tag='?', patterns=[], color=Fore.BLUE):
                             info('Task {bgreen}{tag}{rst} on {byellow}{address}{rst} - {bmagenta}' + p['description'].replace('{match}', '{bblue}{match}{crst}{bmagenta}') + '{rst}')
                         async with target.lock:
                             with open(os.path.join(target.scandir, '_patterns.log'), 'a') as file:
-                                file.writelines(e('[*] {tag}' + ' => ' + p['description'] + '\n'))
-                            with open(os.path.join(target.reportdir, 'csv', 'Patterns.csv'), 'a') as file:
-                                writer_csv = csv.writer(file, delimiter=':')
+                                # Sublister split results
                                 _tool , _ipaddr, _subdom = tag.split(':')
                                 _flag, _data = e(p['description']).split(':',1)
                                 if 'sublist3r-ports' != _tool:
-                                    writer_csv.writerow([_tool, _ipaddr, _subdom, _flag, _data])
-                                else:    
+                                    file.writelines(e('[*] {tag}' + ' => ' + p['description'] + '\n'))
+                                else:
                                     _tmp  = re.search(r'(?P<domain>[\w.-]+)\s+-\s+Found open ports:\s+(?P<ports>[\d,\s]+)', _data)
                                     _subdomm = str(_tmp.group('domain'))
                                     _ports = str(_tmp.group('ports'))
-                                    writer_csv.writerow([_tool, _subdom, _subdomm, _flag, _ports])
+                                    file.writelines('[*] ' + _tool + ':' + _subdom + ':' + _subdomm + ' => ' + _flag + ': ' + _ports + '\n')
+
                 else:
                     for match in matches:
                         if verbose >= 1:
@@ -269,7 +267,8 @@ async def run_cmd(semaphore, cmd, target, tag='?', patterns=[]):
 
 async def parse_domains_detection(stream, tag, target, pattern):
     address = target.address
-    # Check subdomains ends at the same _domain
+    
+    # Check subdomains that ends at the same = _domain
     extract = tldextract.TLDExtract()
     _domain = str(extract(address).domain + '.' + extract(address).suffix)
 
@@ -426,9 +425,12 @@ async def scan_osint(loop, semaphore, target):
                             else:
                                 continue
 
-                            #print(results)
+                            # print(results)
                             # SCAN PROFILES FLAGS:
-                            # domains-enum | subdomin | revlookup
+                            # domains-enum = one time domain.com
+                            # ip-subdomain = a new ip and subdomain
+                            # subdomin-recon = only subdomain
+                            # revlookup = only ipaddress
 
                             if target.token != 'domain':
                                 flag = 'revlookup'
@@ -440,12 +442,12 @@ async def scan_osint(loop, semaphore, target):
               
                             info('Found {bmagenta}{domain}{rst} at {bmagenta}{ipaddress}{rst} on target {byellow}{address}{rst}')
 
-                            with open(os.path.join(target.reportdir, 'csv', 'IpSubdomain.csv'), 'a') as file:
-                                writer_csv = csv.writer(file, delimiter=':')
-                                writer_csv.writerow([ipaddress,domain])
+                            #with open(os.path.join(target.reportdir, 'csv', 'IpSubdomain.csv'), 'a') as file:
+                            #    writer_csv = csv.writer(file, delimiter=':')
+                            #    writer_csv.writerow([ipaddress,domain])
                         
                             if not only_scans_dir:
-                                with open(os.path.join(target.reportdir, 'notes.txt'), 'a') as file:
+                                with open(os.path.join(target.reportdir, 'ipdomain.txt'), 'a') as file:
                                     file.writelines(e('[*] {domain} found on {ipaddress}\n'))
 
                             for domain_scan in osint_scans_config:
@@ -470,17 +472,17 @@ async def scan_osint(loop, semaphore, target):
                                         for manual in osint_scans_config[domain_scan]['manual']:
                                             if 'description' in manual:
                                                 if not heading:
-                                                    file.writelines(e('[*] {domain} on {ipaddress}\n\n'))
+                                                    file.writelines(e('[*] {domain} on {ipaddress}\n'))
                                                     heading = True
                                                 description = manual['description']
-                                                file.writelines(e('\t[-] {description}\n\n'))
+                                                file.writelines(e('[-] {description}\n'))
                                             if 'commands' in manual:
                                                 if not heading:
-                                                    file.writelines(e('[*] {domain} on {ipaddress}\n\n'))
+                                                    file.writelines(e('[*] {domain} on {ipaddress}\n'))
                                                     heading = True
                                                 for manual_command in manual['commands']:
                                                     manual_command = e(manual_command)
-                                                    file.writelines('\t\t' + e('{manual_command}\n\n'))
+                                                    file.writelines('\t' + e('{manual_command}\n'))
                                         if heading:
                                             file.writelines('\n')
                                 if 'scan' in osint_scans_config[domain_scan]:
@@ -512,8 +514,6 @@ async def scan_osint(loop, semaphore, target):
 
                                                 pending.add(asyncio.create_task(run_cmd(semaphore, e(command), target, tag=tag, patterns=patterns)))
 
-
-
 def scan_xxxx(target, concurrent_scans):
     
     start_time = time.time()
@@ -521,30 +521,36 @@ def scan_xxxx(target, concurrent_scans):
 
     if target.token == 'domain':
         basedir = os.path.abspath(os.path.join(outdir, target.address))
+        target.basedir = basedir
+        os.makedirs(basedir, exist_ok=True)
+        
+        scandir = os.path.abspath(os.path.join(basedir, 'scans'))
+        target.scandir = scandir
+        os.makedirs(scandir, exist_ok=True)
+
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'recon')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'files')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'ports')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'vulns')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'web')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'info')), exist_ok=True)
     else:
         basedir = os.path.abspath(os.path.join(outdir, 'revlookup'))
+        target.basedir = basedir
+        os.makedirs(basedir, exist_ok=True)
+        scandir = os.path.abspath(os.path.join(basedir, 'scans'))
+        target.scandir = scandir
+        os.makedirs(scandir, exist_ok=True)
 
-    target.basedir = basedir
-    os.makedirs(basedir, exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'ports')), exist_ok=True)
+        os.makedirs(os.path.abspath(os.path.join(scandir, 'vulns')), exist_ok=True)
 
     if not only_scans_dir:
         reportdir = os.path.abspath(os.path.join(basedir, 'report'))
         target.reportdir = reportdir
         os.makedirs(reportdir, exist_ok=True)
 
-        os.makedirs(os.path.abspath(os.path.join(reportdir, 'csv')), exist_ok=True)    
-    
-    scandir = os.path.abspath(os.path.join(basedir, 'scans'))
-
-    target.scandir = scandir
-    os.makedirs(scandir, exist_ok=True)
-
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'recon')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'files')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'ports')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'vulns')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'web')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join(scandir, 'info')), exist_ok=True)
+        #os.makedirs(os.path.abspath(os.path.join(reportdir, 'csv')), exist_ok=True)    
 
     # Use a lock when writing to specific files that may be written to by other asynchronous functions.
     target.lock = asyncio.Lock()
@@ -584,15 +590,12 @@ if __name__ == '__main__':
     parser.add_argument('-cs', '--concurrent-scans', action='store', metavar='<number>', type=int, default=3, help='The maximum number of scans to perform per target host. Default: %(default)s')
     parser.add_argument('--profile', action='store', default='default', dest='profile_name', help='The port scanning profile to use (defined in port-scan-profiles.toml). Default: %(default)s')
     parser.add_argument('-o', '--output', action='store', default='osint', dest='output_dir', help='The output directory for results. Default: %(default)s')
-    parser.add_argument('--single-target', action='store_true', default=False, help='Only scan a domain or a list of ipaddress. A directory named after the target will not be created. Instead, the directory structure will be created within the output directory. Default: false')
     parser.add_argument('--only-scans-dir', action='store_true', default=False, help='Only create the "scans" directory for results. Other directories (e.g. exploit, loot, report) will not be created. Default: false')
     parser.add_argument('-v', '--verbose', action='count', default=0, help='Enable verbose output. Repeat for more verbosity.')
     parser.add_argument('--disable-sanity-checks', action='store_true', default=False, help='Disable sanity checks that would otherwise prevent the scans from running. Default: false')
     parser.error = lambda s: fail(s[0].upper() + s[1:])
     args = parser.parse_args()
 
-    single_target = args.single_target
-    
     only_scans_dir = args.only_scans_dir
     errors = False
     
@@ -658,52 +661,52 @@ if __name__ == '__main__':
             error('The target file {args.target_file} could not be read.')
             sys.exit(1)
     
-    if len(raw_targets) > 1:
-        targets_net = [str(pis.ip_network(target, strict=False)) for target in raw_targets]
-        for _tmp in targets_net:
-            if _tmp not in targets:
-                targets.append(_tmp)
+    if len(raw_targets) == 1:
+        try:
+            _ip = str(pis.ip_network(raw_targets[0]))
+            if _ip not in targets:
+                targets.append(_ip)
                 token = 'ipaddress'
-    
-    for target in raw_targets:
-        if single_target:
+        except ValueError:
             try:
-                _tmp = tldextract.extract(target)
+                _tmp = tldextract.extract(raw_targets[0])
                 _dom = str(_tmp.domain + '.' + _tmp.suffix)
                 if _dom not in targets:
                     targets.append(_dom)
                     token = 'domain'
             except ValueError:
-                               
+                error(raw_targets[0] + 'does not appear to be a valid IP address or domain,')
+                errors = True
+    
+    if len(raw_targets) > 1:
+        try:
+            targets_net = [str(pis.ip_network(target, strict=False)) for target in raw_targets]
+            for _tmp in targets_net:
+                if _tmp not in targets:
+                    targets.append(_tmp)
+                    token = 'ipaddress'
+        except ValueError:
+            for target in raw_targets:
                 try:
-                    _ip = str(pis.ip_network(target))
-                    if _ip not in targets:
-                        targets.append(_ip)
+                    target_range = pis.ip_network(target, strict=False)
+                    if not args.disable_sanity_checks and target_range.num_addresses > 256:
+                        error(target + ' contains ' + str(target_range.num_addresses) + ' addresses. Check that your CIDR notation is correct. If it is, re-run with the --disable-sanity-checks option to suppress this check.')
+                        errors = True
+                    elif target_range not in targets:
+                        print(target_range)
+                        target_range = str(target_range)
+                        targets.append(target_range)
                         token = 'ipaddress'
                 except ValueError:
-                    error(target + 'does not appear to be a valid IP address or domain,')
-                    errors = True
-
-        try:
-            target_range = pis.ip_network(target, strict=False)
-            if not args.disable_sanity_checks and target_range.num_addresses > 256:
-                error(target + ' contains ' + str(target_range.num_addresses) + ' addresses. Check that your CIDR notation is correct. If it is, re-run with the --disable-sanity-checks option to suppress this check.')
-                errors = True
-            elif target_range not in targets:
-                target_range = str(target_range)
-                targets.append(target_range)
-                token = 'ipaddress'
-        except ValueError:
-
-            try:
-                ip = socket.gethostbyname(target)
+                    try:
+                        ip = socket.gethostbyname(target)
                    
-                if target not in targets:
-                    targets.append(target)
-                    token = 'ipaddress'
-            except socket.gaierror:
-                error(target + ' does not appear to be a valid IP address, IP range, or resolvable hostname.')
-                errors = True
+                        if target not in targets:
+                            targets.append(target)
+                            token = 'ipaddress'
+                    except socket.gaierror:
+                        error(target + ' does not appear to be a valid IP address, IP range, or resolvable hostname.')
+                        errors = True
         
     if len(targets) == 0:
         error('You must specify at least one target to scan!')
