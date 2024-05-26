@@ -6,7 +6,7 @@ The tool works by firstly performing a enumeration of subdomains and dns records
 
 Everything in the tool is highly configurable. The author will not be held responsible for negative actions that result from the mis-use of this tool.
 
-**Disclaimer: While OSITNRecon endeavors to perform as much identification and enumeration of the domain as possible, there is no guarantee that every output will be identified, or that every information will be fully catched.**
+**Disclaimer: While OSINTRecon endeavors to perform as much identification and enumeration of the domain as possible, there is no guarantee that every output will be identified, or that every information will be fully catched.**
 
 ## Origin
 
