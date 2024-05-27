@@ -61,8 +61,8 @@ Install and execute `osintrecon.py` from within the OSINT directory, install the
 
 You can also create a VirtualEnviroment with python3:
 ```bash
-(root) python3 -m venv osintrecon
-(root) source osintrecon/bin/activate
+(root) python3 -m venv .osintrecon
+(root) source .osintrecon/bin/activate
 (root) pip install -r requirements.txt
 ```
 To exit the virtual enviromment:
